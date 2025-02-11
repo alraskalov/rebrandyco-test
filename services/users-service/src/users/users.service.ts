@@ -1,4 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
@@ -22,7 +27,7 @@ export class UsersService {
       where: { email },
     });
     if (existingUser) {
-      throw new Error('Пользователь уже существует');
+      throw new ConflictException('Пользователь с таким E-mail уже существует');
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -43,12 +48,12 @@ export class UsersService {
 
     const user = await this.usersRepository.findOne({ where: { email } });
     if (user === null) {
-      throw new Error('Неверные учетные данные');
+      throw new UnauthorizedException('Неверные учетные данные');
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      throw new Error('Неверные учетные данные');
+      throw new UnauthorizedException('Неверные учетные данные');
     }
 
     const payload = { email: user.email, sub: user.id, role: user.role };
@@ -58,10 +63,18 @@ export class UsersService {
   }
 
   async findById(id: number): Promise<User | null> {
-    return await this.usersRepository.findOne({ where: { id } });
+    const user = await this.usersRepository.findOne({ where: { id } });
+    if (!user) {
+      throw new NotFoundException(`Пользователь с ID ${id} не найден`);
+    }
+    return user;
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    return await this.usersRepository.findOne({ where: { email } });
+    const user = await this.usersRepository.findOne({ where: { email } });
+    if (!user) {
+      throw new NotFoundException(`Пользователь с E-mail ${email} не найден`);
+    }
+    return user;
   }
 }
