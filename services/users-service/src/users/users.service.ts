@@ -9,57 +9,59 @@ import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class UsersService {
-    constructor(
-        @InjectRepository(User)
-        private usersRepository: Repository<User>,
-        private jwtService: JwtService,
-    ) {}
+  constructor(
+    @InjectRepository(User)
+    private usersRepository: Repository<User>,
+    private jwtService: JwtService,
+  ) {}
 
-    async create(createUserDto: CreateUserDto): Promise<User> {
-        const { email, password, username, avatarUrl } = createUserDto;
+  async create(createUserDto: CreateUserDto): Promise<User> {
+    const { email, password, username, avatarUrl } = createUserDto;
 
-        const existingUser = await this.usersRepository.findOne({ where: { email } });
-        if (existingUser) {
-            throw new Error('User already exists');
-        }
-
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        const user = this.usersRepository.create({
-            email,
-            username,
-            password: hashedPassword,
-            avatarUrl,
-            role: 'simple',
-        });
-
-        return await this.usersRepository.save(user);
+    const existingUser = await this.usersRepository.findOne({
+      where: { email },
+    });
+    if (existingUser) {
+      throw new Error('Пользователь уже существует');
     }
 
-    async login(loginDto: LoginDto): Promise<{ access_token: string }> {
-        const { email, password } = loginDto;
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-        const user = await this.usersRepository.findOne({ where: { email } });
-        if (user === null) {
-            throw new Error('Invalid credentials');
-        }
+    const user = this.usersRepository.create({
+      email,
+      username,
+      password: hashedPassword,
+      avatarUrl,
+      role: 'simple',
+    });
 
-        const isPasswordValid = await bcrypt.compare(password, user.password);
-        if (!isPasswordValid) {
-            throw new Error('Invalid credentials');
-        }
+    return await this.usersRepository.save(user);
+  }
 
-        const payload = { email: user.email, sub: user.id, role: user.role };
-        const access_token = this.jwtService.sign(payload);
+  async login(loginDto: LoginDto): Promise<{ access_token: string }> {
+    const { email, password } = loginDto;
 
-        return { access_token };
+    const user = await this.usersRepository.findOne({ where: { email } });
+    if (user === null) {
+      throw new Error('Неверные учетные данные');
     }
 
-    async findById(id: number): Promise<User | null> {
-        return await this.usersRepository.findOne({ where: { id } });
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      throw new Error('Неверные учетные данные');
     }
 
-    async findByEmail(email: string): Promise<User | null> {
-        return await this.usersRepository.findOne({ where: { email } });
-    }
+    const payload = { email: user.email, sub: user.id, role: user.role };
+    const access_token = this.jwtService.sign(payload);
+
+    return { access_token };
+  }
+
+  async findById(id: number): Promise<User | null> {
+    return await this.usersRepository.findOne({ where: { id } });
+  }
+
+  async findByEmail(email: string): Promise<User | null> {
+    return await this.usersRepository.findOne({ where: { email } });
+  }
 }
