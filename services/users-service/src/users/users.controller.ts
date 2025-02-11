@@ -1,4 +1,9 @@
-import { Controller } from '@nestjs/common';
+import {
+  ConflictException,
+  Controller,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user-dto';
 import { LoginDto } from './dto/login-dto';
@@ -17,10 +22,21 @@ export class UsersController {
     description: 'Пользователь успешно создан',
     type: User,
   })
+  @ApiResponse({
+    status: 409,
+    description: 'Пользователь с таким E-mail уже существует',
+  })
   @ApiBody({ type: CreateUserDto })
   @MessagePattern('create_user')
   async createUser(@Payload() createUserDto: CreateUserDto): Promise<User> {
-    return this.usersService.create(createUserDto);
+    try {
+      return await this.usersService.create(createUserDto);
+    } catch (error) {
+      if (error as ConflictException) {
+        throw new ConflictException(error.message);
+      }
+      throw error;
+    }
   }
 
   @ApiOperation({ summary: 'Авторизация пользователя и получение JWT токена' })
@@ -31,12 +47,20 @@ export class UsersController {
       example: { access_token: 'jwt_token_here' },
     },
   })
+  @ApiResponse({ status: 401, description: 'Неверные учетные данные' })
   @ApiBody({ type: LoginDto })
   @MessagePattern('login_user')
   async login(
     @Payload() loginDto: LoginDto,
   ): Promise<{ access_token: string }> {
-    return this.usersService.login(loginDto);
+    try {
+      return await this.usersService.login(loginDto);
+    } catch (error) {
+      if (error as UnauthorizedException) {
+        throw new UnauthorizedException(error.message);
+      }
+      throw error;
+    }
   }
 
   @ApiOperation({ summary: 'Получить информацию о текущем пользователе' })
@@ -45,8 +69,16 @@ export class UsersController {
     description: 'Информация о пользователе',
     type: User,
   })
+  @ApiResponse({ status: 404, description: 'Пользователь не найден' })
   @MessagePattern('get_user_by_id')
   async getProfile(@Payload() userId: number): Promise<User | null> {
-    return this.usersService.findById(userId);
+    try {
+      return await this.usersService.findById(userId);
+    } catch (error) {
+      if (error as NotFoundException) {
+        throw new NotFoundException(error.message);
+      }
+      throw error;
+    }
   }
 }
