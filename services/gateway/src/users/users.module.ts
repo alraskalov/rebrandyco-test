@@ -9,9 +9,9 @@ import { AuthModule } from '../auth/auth.module';
     AuthModule,
     ClientsModule.register([
       {
-        name: 'USERS_SERVICE', // Имя микросервиса
-        transport: Transport.TCP, // Используем TCP для связи
-        options: { host: 'app', port: 3001 }, // Хост и порт, на которых работает микросервис
+        name: 'USERS_SERVICE',
+        transport: Transport.TCP,
+        options: { host: 'app', port: 3001 },
       },
     ]),
   ],

@@ -1,9 +1,29 @@
-import { Controller, Get, Param, Request, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Request,
+  UnauthorizedException,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiOperation,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { User } from '../auth/entities/user.entity';
 import { JwtAuthGuard } from '../auth/guards/auth.guard';
 import { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
+import { FileInterceptor } from '@nestjs/platform-express';
+import * as multer from 'multer';
+import * as path from 'node:path';
 
 @Controller('users')
 export class UsersController {
@@ -36,7 +56,70 @@ export class UsersController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Get(':id')
-  async getProfile(@Param('id') id: number): Promise<User> {
+  async getProfile(@Param('id', ParseIntPipe) id: number): Promise<User> {
     return this.usersService.getUserById(id);
+  }
+
+  @ApiOperation({ summary: 'Обновить аватар пользователя' })
+  @ApiResponse({
+    status: 200,
+    description: 'Аватар успешно обновлен',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Ошибка при обновлении аватара',
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'Загрузите изображение аватара',
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: multer.diskStorage({
+        destination: './uploads/avatars',
+        filename: (req, file, cb) => {
+          const ext = path.extname(file.originalname);
+          const fileName = `${Date.now()}${ext}`;
+          cb(null, fileName);
+        },
+      }),
+    }),
+  )
+  @Post(':id/avatar')
+  async updateAvatar(
+    @Param('id', ParseIntPipe) id: number,
+    @UploadedFile() file: multer.File,
+    @Request() req: { user: JwtPayload },
+  ) {
+    const currentUserId = req.user.sub;
+
+    if (currentUserId !== id) {
+      throw new UnauthorizedException(
+        'Вы не можете обновить аватар другого пользователя',
+      );
+    }
+
+    const avatarUrl = `/uploads/avatars/${file.filename}`;
+    const result = await this.usersService.updateAvatar(id, avatarUrl);
+
+    if (result.success) {
+      return {
+        message: 'Аватар успешно обновлен',
+        avatarUrl,
+      };
+    } else {
+      throw new Error('Ошибка при обновлении аватара');
+    }
   }
 }

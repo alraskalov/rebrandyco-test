@@ -32,13 +32,20 @@ export class AuthService {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    return this.usersRepository.create({
+    await this.usersRepository.save({
       email,
       username,
       password: hashedPassword,
       avatarUrl,
       role: 'simple',
     });
+
+    return {
+      email,
+      username,
+      avatarUrl,
+      role: 'simple',
+    } as User;
   }
 
   async login(loginDto: LoginDto): Promise<User> {

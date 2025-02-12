@@ -6,7 +6,6 @@ import { User } from './entities/user.entity';
 import { LoginDto } from './dto/login-dto';
 import { JwtService } from '@nestjs/jwt';
 
-// Начиная с NestJS v8 toPromise() помечен, как - deprecated, вместо него использую предложенные lastValueFrom | firstValueFrom
 @Injectable()
 export class AuthService {
   constructor(
@@ -55,7 +54,6 @@ export class AuthService {
         this.client.send({ cmd: 'get_user_by_id' }, payload.sub),
       );
 
-      // Генерация нового Access Token
       const newAccessToken = this.generateAccessToken(user);
 
       return { access_token: newAccessToken };
