@@ -1,99 +1,79 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# API Gateway
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## Описание
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+API Gateway — это центральный компонент, который маршрутизирует запросы к различным микросервисам. В нашем случае, API Gateway предоставляет доступ к микросервису Пользователей и выполняет следующие функции:
 
-## Description
+- Авторизация пользователей с помощью JWT.
+- Управление аватаром пользователя (загрузка и обновление).
+- Отправка запросов к микросервисам (в частности, к Users Service) для получения или обновления данных о пользователях.
+- Реализует protected-роуты с проверкой JWT токена.
+- Обработка **refresh token** для обновления истекших **access token**.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Структура
 
-## Project setup
+- **users.controller.ts** — Обрабатывает запросы, связанные с пользователями (например получение данных о пользователе, обновление аватара).
+- **auth.controller.ts** — Обрабатывает запросы авторизации и регистрации.
+- **auth.service.ts** — Логика авторизации, включая генерацию JWT токенов.
+- **users.service.ts** — Служит для взаимодействия с микросервисом Пользователей посредством TCP-транспорта.
+- **main.ts** — Инициализация приложения.
 
-```bash
-$ npm install
-```
+## Зависимости
 
-## Compile and run the project
+- **NestJS** — Основной фреймворк для создания серверного приложения.
+- **@nestjs/jwt** — Библиотека для работы с JSON Web Tokens (JWT).
+- **@nestjs/passport** и **passport-jwt** — Для реализации стратегии авторизации с помощью JWT.
+- **@nestjs/microservices** — Для взаимодействия с микросервисами.
+- **multer** и **@nestjs/platform-express** — Для обработки загрузки файлов (например аватара пользователя).
+- **swagger** — Для генерации API Документации.
 
-```bash
-# development
-$ npm run start
+## Как работает API Gateway
 
-# watch mode
-$ npm run start:dev
+1. **Авторизация пользователя**:
 
-# production mode
-$ npm run start:prod
-```
+   - При получении запроса на `/auth/login` происходит проверка учетных данных.
+   - Если авторизация успешна, генерируется JWT токен, который возвращается пользователю.
+   - Этот токен необходимо использовать в заголовке Authorization при отправке запросов на protected-роуты.
 
-## Run tests
+2. **Получение информации о пользователе**:
 
-```bash
-# unit tests
-$ npm run test
+   - Роут `/users/{id}` получает информацию о пользователе, отправляя запрос в микросервис, используя ID пользователя.
 
-# e2e tests
-$ npm run test:e2e
+3. **Обновление аватара**:
 
-# test coverage
-$ npm run test:cov
-```
+   - Пользователь может загрузить новый аватар через `/users/{id}/avatar`. Запрос проходит через API Gateway, затем передается в микросервис для обработки.
 
-## Deployment
+4. **Защищенные маршруты**:
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+   - Protected-роуты, такие, как `/users/{id}`, требуют валидного JWT токена в заголовке Authorization.
+   - Токен используется для аутентификации пользователя и проверки, что он имеет доступ к запрашиваемым данным.
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+5. **Обновление access token с использованием refresh token**:
 
-```bash
-$ npm install -g mau
-$ mau deploy
-```
+   - Для защиты от истечения срока действия **access token**, API Gateway реализует возможность обновления токенов с использованием **refresh token**.
+   - Когда **access token** истекает, пользователь может запросить новый **access token**, передав **refresh token** на специальном маршруте `/auth/refresh`.
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+   #### Как это работает:
 
-## Resources
+   - Клиент пользователя должен отправить **refresh token** в теле запроса на маршрут `/auth/refresh`.
+   - API Gateway проверит **refresh token** и, если он действителен, сгенерирует новый **access token**, который можно использовать для дальнейших запросов.
+   - Это позволяет пользователю продолжать работать с API без повторной авторизации, даже если **access token** истек.
 
-Check out a few resources that may come in handy when working with NestJS:
+## Как запустить
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+1. Установите зависимости:
 
-## Support
+   ```bash
+   npm install
+   ```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+2. Запустите приложение:
 
-## Stay in touch
+   ```bash
+   npm run start
+   ```
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+3. Swagger документация будет доступна по адресу:
+4. ```bash
+   http://localhost:3000/api
+   ```
