@@ -3,8 +3,8 @@ module.exports = {
         {
             name: 'api-gateway',
             script: './services/gateway/dist/main.js',
-            instances: 'max',
-            exec_mode: 'cluster',
+            instances: 1,
+            exec_mode: 'fork',
             watch: false,
             env: {
                 NODE_ENV: 'production',
@@ -13,8 +13,8 @@ module.exports = {
         {
             name: 'users-service',
             script: './services/users-service/dist/main.js',
-            instances: 'max',
-            exec_mode: 'cluster',
+            instances: 1,
+            exec_mode: 'fork',
             watch: false,
             env: {
                 NODE_ENV: 'production',
@@ -24,8 +24,8 @@ module.exports = {
         {
             name: 'comments-service',
             script: './services/comments-service/dist/main.js',
-            instances: 'max',
-            exec_mode: 'cluster',
+            instances: 1,
+            exec_mode: 'fork',
             watch: false,
             env: {
                 NODE_ENV: 'production',
