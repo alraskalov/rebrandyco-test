@@ -10,6 +10,7 @@ async function bootstrap() {
     .setTitle('API Gateway')
     .setDescription('API Gateway для взаимодействия с микросервисами')
     .setVersion('1.0')
+    .addBearerAuth()
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

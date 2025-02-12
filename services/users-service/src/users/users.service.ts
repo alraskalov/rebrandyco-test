@@ -1,83 +1,20 @@
-import {
-  ConflictException,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import * as bcrypt from 'bcryptjs';
-import { User } from './entities/user.entity';
-import { CreateUserDto } from './dto/create-user-dto';
-import { LoginDto } from './dto/login-dto';
-import { JwtService } from '@nestjs/jwt';
+import { User } from '../auth/entities/user.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
-    private jwtService: JwtService,
   ) {}
 
-  async create(createUserDto: CreateUserDto): Promise<User> {
-    const { email, password, username, avatarUrl } = createUserDto;
-
-    const existingUser = await this.usersRepository.findOne({
-      where: { email },
-    });
-
-    if (existingUser) {
-      throw new ConflictException('Пользователь с таким E-mail уже существует');
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    try {
-      const user = this.usersRepository.create({
-        email,
-        username,
-        password: hashedPassword,
-        avatarUrl,
-        role: 'simple',
-      });
-
-      return await this.usersRepository.save(user);
-    } catch (error) {
-      throw new InternalServerErrorException(
-        'Ошибка при создании пользователя',
-      );
-    }
-  }
-
-  async login(loginDto: LoginDto): Promise<{ access_token: string }> {
-    const { email, password } = loginDto;
-
-    const user = await this.usersRepository.findOne({ where: { email } });
-    if (user === null) {
-      throw new UnauthorizedException('Неверные учетные данные');
-    }
-
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Неверные учетные данные');
-    }
-
-    try {
-      const payload = { email: user.email, sub: user.id, role: user.role };
-      const access_token = this.jwtService.sign(payload);
-
-      return { access_token };
-    } catch (error) {
-      throw new InternalServerErrorException(
-        'Ошибка при авторизации пользователя',
-      );
-    }
-  }
-
   async findById(id: number): Promise<User | null> {
-    const user = await this.usersRepository.findOne({ where: { id } });
+    const user = await this.usersRepository.findOne({
+      where: { id },
+      select: ['id', 'email', 'username', 'avatarUrl', 'role'],
+    });
     if (!user) {
       throw new NotFoundException(`Пользователь с ID ${id} не найден`);
     }
@@ -85,7 +22,10 @@ export class UsersService {
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    const user = await this.usersRepository.findOne({ where: { email } });
+    const user = await this.usersRepository.findOne({
+      where: { email },
+      select: ['id', 'email', 'username', 'avatarUrl', 'role'],
+    });
     if (!user) {
       throw new NotFoundException(`Пользователь с E-mail ${email} не найден`);
     }
