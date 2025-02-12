@@ -1,6 +1,7 @@
 import {
   ConflictException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -26,21 +27,28 @@ export class UsersService {
     const existingUser = await this.usersRepository.findOne({
       where: { email },
     });
+
     if (existingUser) {
       throw new ConflictException('Пользователь с таким E-mail уже существует');
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = this.usersRepository.create({
-      email,
-      username,
-      password: hashedPassword,
-      avatarUrl,
-      role: 'simple',
-    });
+    try {
+      const user = this.usersRepository.create({
+        email,
+        username,
+        password: hashedPassword,
+        avatarUrl,
+        role: 'simple',
+      });
 
-    return await this.usersRepository.save(user);
+      return await this.usersRepository.save(user);
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Ошибка при создании пользователя',
+      );
+    }
   }
 
   async login(loginDto: LoginDto): Promise<{ access_token: string }> {
@@ -56,10 +64,16 @@ export class UsersService {
       throw new UnauthorizedException('Неверные учетные данные');
     }
 
-    const payload = { email: user.email, sub: user.id, role: user.role };
-    const access_token = this.jwtService.sign(payload);
+    try {
+      const payload = { email: user.email, sub: user.id, role: user.role };
+      const access_token = this.jwtService.sign(payload);
 
-    return { access_token };
+      return { access_token };
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Ошибка при авторизации пользователя',
+      );
+    }
   }
 
   async findById(id: number): Promise<User | null> {

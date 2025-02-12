@@ -4,7 +4,6 @@ import { User } from './entities/user.entity';
 import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { JwtModule } from '@nestjs/jwt';
-import { ClientsModule, Transport } from '@nestjs/microservices';
 
 @Module({
   imports: [
@@ -13,16 +12,6 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
       secret: 'secretKey',
       signOptions: { expiresIn: '1h' },
     }),
-    ClientsModule.register([
-      {
-        name: 'USERS_SERVICE',
-        transport: Transport.TCP,
-        options: {
-          host: 'localhost',
-          port: 3000,
-        },
-      },
-    ]),
   ],
   providers: [UsersService],
   controllers: [UsersController],

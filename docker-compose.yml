@@ -4,6 +4,8 @@ services:
   users-db:
     image: postgres:latest
     environment:
+      POSTGRES_HOST: users-db
+      POSTGRES_PORT: 5432
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
       POSTGRES_DB: users_db
@@ -15,6 +17,8 @@ services:
   comments-db:
     image: postgres:latest
     environment:
+      POSTGRES_HOST: comments-db
+      POSTGRES_PORT: 5432
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
       POSTGRES_DB: comments_db
