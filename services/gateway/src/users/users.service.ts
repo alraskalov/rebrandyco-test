@@ -15,12 +15,10 @@ export class UsersService {
     );
   }
 
-  async updateAvatar(
-    userId: number,
-    avatarUrl: string,
-  ): Promise<{ success: boolean }> {
-    return lastValueFrom(
-      this.userClient.send({ cmd: 'update_avatar' }, { userId, avatarUrl }),
-    );
+  async updateAvatar(data: {
+    userId: number;
+    avatarUrl: string;
+  }): Promise<{ success: boolean }> {
+    return lastValueFrom(this.userClient.send({ cmd: 'update_avatar' }, data));
   }
 }

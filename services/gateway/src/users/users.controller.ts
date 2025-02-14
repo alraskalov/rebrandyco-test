@@ -96,22 +96,18 @@ export class UsersController {
       }),
     }),
   )
-  @Post(':id/avatar')
+  @Post('/avatar')
   async updateAvatar(
-    @Param('id', ParseIntPipe) id: number,
     @UploadedFile() file: multer.File,
     @Request() req: { user: JwtPayload },
   ) {
     const currentUserId = req.user.sub;
 
-    if (currentUserId !== id) {
-      throw new UnauthorizedException(
-        'Вы не можете обновить аватар другого пользователя',
-      );
-    }
-
     const avatarUrl = `/uploads/avatars/${file.filename}`;
-    const result = await this.usersService.updateAvatar(id, avatarUrl);
+    const result = await this.usersService.updateAvatar({
+      userId: currentUserId,
+      avatarUrl,
+    });
 
     if (result.success) {
       return {

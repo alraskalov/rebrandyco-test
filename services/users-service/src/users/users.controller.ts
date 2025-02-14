@@ -28,14 +28,10 @@ export class UsersController {
 
   @MessagePattern({ cmd: 'update_avatar' })
   async updateAvatar(
-    @Payload() { userId, avatarUrl }: { userId: number; avatarUrl: string },
+    @Payload() data: { userId: number; avatarUrl: string },
   ): Promise<{ success: boolean }> {
     try {
-      const user = await this.usersService.findById(userId);
-      if (user) {
-        user.avatarUrl = avatarUrl;
-        await this.usersService.save(user);
-      }
+      await this.usersService.updateAvatar(data);
 
       return { success: true };
     } catch (error) {
