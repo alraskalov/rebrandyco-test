@@ -21,6 +21,10 @@ export class CommentService {
   ): Promise<Comment> {
     const { userId, text, autoDeleteAfter } = data;
 
+    if (!text || text === '') {
+      throw new Error(`Текст не может быть пустым`);
+    }
+
     try {
       const comment = this.commentRepository.create({
         userId,

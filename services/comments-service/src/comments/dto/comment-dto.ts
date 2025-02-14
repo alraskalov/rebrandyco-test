@@ -14,8 +14,8 @@ export class CommentDto {
   text: string;
 
   @IsOptional()
-  @IsEnum(['hour', 'day', 'week'])
-  autoDeleteAfter?: 'hour' | 'day' | 'week';
+  @IsEnum(['minute', 'hour', 'day', 'week'])
+  autoDeleteAfter?: 'minute' | 'hour' | 'day' | 'week';
 
   @IsNumber()
   userId: number;

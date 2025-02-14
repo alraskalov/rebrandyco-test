@@ -44,7 +44,7 @@ export class CommentController {
     @Body()
     data: {
       text: string;
-      autoDeleteAfter?: 'hour' | 'day' | 'week';
+      autoDeleteAfter?: 'minute' | 'hour' | 'day' | 'week';
     },
   ): Promise<Comment> {
     const currentUserId = req.user.sub;

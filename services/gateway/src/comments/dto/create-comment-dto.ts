@@ -16,6 +16,6 @@ export class CreateCommentDto {
     required: true,
   })
   @IsOptional()
-  @IsEnum(['hour', 'day', 'week'])
-  autoDeleteAfter?: 'hour' | 'day' | 'week';
+  @IsEnum(['minute', 'minute', 'hour', 'day', 'week'])
+  autoDeleteAfter?: 'minute' | 'hour' | 'day' | 'week';
 }

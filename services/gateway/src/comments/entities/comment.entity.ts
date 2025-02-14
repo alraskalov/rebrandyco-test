@@ -11,8 +11,12 @@ export class Comment {
   @Column()
   userId: number;
 
-  @Column({ nullable: true, enum: ['hour', 'day', 'week'], default: null })
-  autoDeleteAfter?: 'hour' | 'day' | 'week';
+  @Column({
+    nullable: true,
+    enum: ['minute', 'hour', 'day', 'week'],
+    default: null,
+  })
+  autoDeleteAfter?: 'minute' | 'hour' | 'day' | 'week';
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;

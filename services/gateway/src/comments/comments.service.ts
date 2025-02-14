@@ -12,7 +12,7 @@ export class CommentService {
   addComment(data: {
     userId: number;
     text: string;
-    autoDeleteAfter?: 'hour' | 'day' | 'week';
+    autoDeleteAfter?: 'minute' | 'hour' | 'day' | 'week';
   }): Promise<Comment> {
     return lastValueFrom(this.commentClient.send({ cmd: 'add_comment' }, data));
   }
