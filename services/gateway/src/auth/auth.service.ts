@@ -10,7 +10,7 @@ import { JwtService } from '@nestjs/jwt';
 export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
-    @Inject('USERS_SERVICE') private readonly client: ClientProxy,
+    @Inject('USERS_SERVICE') private readonly userClient: ClientProxy,
   ) {}
 
   private generateAccessToken(user: User): string {
@@ -25,7 +25,7 @@ export class AuthService {
 
   async register(createUserDto: CreateUserDto): Promise<User> {
     return firstValueFrom(
-      this.client.send({ cmd: 'register_user' }, createUserDto),
+      this.userClient.send({ cmd: 'register_user' }, createUserDto),
     );
   }
 
@@ -35,7 +35,7 @@ export class AuthService {
     const { email, password } = loginDto;
 
     const user = await firstValueFrom(
-      this.client.send({ cmd: 'login_user' }, { email, password }),
+      this.userClient.send({ cmd: 'login_user' }, { email, password }),
     );
 
     const accessToken = this.generateAccessToken(user);
@@ -51,7 +51,7 @@ export class AuthService {
       const payload = this.jwtService.verify(refreshToken);
 
       const user = await firstValueFrom(
-        this.client.send({ cmd: 'get_user_by_id' }, payload.sub),
+        this.userClient.send({ cmd: 'get_user_by_id' }, payload.sub),
       );
 
       const newAccessToken = this.generateAccessToken(user);

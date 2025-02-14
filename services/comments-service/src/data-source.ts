@@ -1,14 +1,14 @@
-import { User } from './auth/entities/user.entity';
+import { Comment } from './comments/entities/comment.entity';
 import { DataSource, DataSourceOptions } from 'typeorm';
 
 const options: DataSourceOptions = {
   type: 'postgres',
-  host: 'users-db',
+  host: 'comments-db',
   port: 5432,
   username: 'user',
   password: 'password',
-  database: 'users_db',
-  entities: [User],
+  database: 'comments_db',
+  entities: [Comment],
   synchronize: true,
 };
-export const userDataSource = new DataSource(options);
+export const commentDataSource = new DataSource(options);

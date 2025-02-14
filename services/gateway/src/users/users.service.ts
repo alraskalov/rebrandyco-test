@@ -5,10 +5,14 @@ import { User } from '../auth/entities/user.entity';
 
 @Injectable()
 export class UsersService {
-  constructor(@Inject('USERS_SERVICE') private readonly client: ClientProxy) {}
+  constructor(
+    @Inject('USERS_SERVICE') private readonly userClient: ClientProxy,
+  ) {}
 
   async getUserById(userId: number): Promise<User> {
-    return lastValueFrom(this.client.send({ cmd: 'get_user_by_id' }, userId));
+    return lastValueFrom(
+      this.userClient.send({ cmd: 'get_user_by_id' }, userId),
+    );
   }
 
   async updateAvatar(
@@ -16,7 +20,7 @@ export class UsersService {
     avatarUrl: string,
   ): Promise<{ success: boolean }> {
     return lastValueFrom(
-      this.client.send({ cmd: 'update_avatar' }, { userId, avatarUrl }),
+      this.userClient.send({ cmd: 'update_avatar' }, { userId, avatarUrl }),
     );
   }
 }
