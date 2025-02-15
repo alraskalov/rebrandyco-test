@@ -1,23 +1,24 @@
-# Используем Node.js образ
-FROM node:23
+FROM node:23 AS build
 
-# Устанавливаем рабочую директорию
 WORKDIR /app
 
-# Копируем все исходные коды
+COPY services/gateway/package*.json services/gateway/
+COPY services/users-service/package*.json services/users-service/
+COPY services/comments-service/package*.json services/comments-service/
+
+RUN cd services/gateway && npm install
+RUN cd services/users-service && npm install
+RUN cd services/comments-service && npm install
+
 COPY services/ services/
 COPY docker/ecosystem.config.js docker/ecosystem.config.js
 
-# Устанавливаем зависимости для каждого микросервиса
-RUN cd services/gateway && npm install && npm run build
-RUN cd services/users-service && npm install && npm run build
-RUN cd services/comments-service && npm install && npm run build
+RUN cd services/gateway && npm run build
+RUN cd services/users-service && npm run build
+RUN cd services/comments-service && npm run build
 
-# Устанавливаем pm2 глобально
 RUN npm install -g pm2
 
-# Экспонируем порты для сервисов
 EXPOSE 3000 3001 3002
 
-# Запускаем все микросервисы через pm2
 CMD ["pm2-runtime", "docker/ecosystem.config.js"]
